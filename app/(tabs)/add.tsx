@@ -23,12 +23,20 @@ export default function AddPriceScreen() {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [price, setPrice] = useState('');
   const [media, setMedia] = useState<{ uri: string; type: 'image' | 'video' | 'receipt' }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedProduct || !selectedStore || !price || media.length === 0) {
       Alert.alert('Missing Information', 'Please fill in all fields and add at least one photo, video, or receipt.');
       return;
     }
+    
+    if (parseFloat(price) <= 0) {
+      Alert.alert('Invalid Price', 'Please enter a valid price greater than $0.00.');
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     // Mock user data (in a real app, this would come from authentication)
     const currentUser = users[0];
@@ -53,22 +61,51 @@ export default function AddPriceScreen() {
       verifications: [],
     };
     
-    addSubmission(newSubmission);
-    
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-    
-    Alert.alert(
-      'Price Submitted',
-      'Thank you for contributing to the community!',
-      [{ text: 'OK', onPress: () => router.push('/') }]
-    );
+    // Simulate API call delay
+    setTimeout(() => {
+      addSubmission(newSubmission);
+      
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      setIsSubmitting(false);
+      
+      Alert.alert(
+        'Price Submitted Successfully! 🎉',
+        `Thank you for contributing to the community!\n\n${selectedProduct.name} - $${parseFloat(price).toFixed(2)} at ${selectedStore.name} has been added to the price feed.`,
+        [
+          {
+            text: 'View in Feed',
+            onPress: () => {
+              // Reset form
+              setSelectedProduct(null);
+              setSelectedStore(null);
+              setPrice('');
+              setMedia([]);
+              router.push('/');
+            }
+          },
+          {
+            text: 'Add Another Price',
+            onPress: () => {
+              // Reset form
+              setSelectedProduct(null);
+              setSelectedStore(null);
+              setPrice('');
+              setMedia([]);
+            }
+          }
+        ]
+      );
+    }, 1500);
   };
   
   const handleMediaChange = (newMedia: { uri: string; type: 'image' | 'video' | 'receipt' }[]) => {
     setMedia(newMedia);
   };
+  
+  const isFormValid = selectedProduct && selectedStore && price && parseFloat(price) > 0 && media.length > 0;
   
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -81,17 +118,26 @@ export default function AddPriceScreen() {
           headerTintColor: colors.text,
           headerRight: () => (
             <Pressable 
-              style={[styles.submitButton, { backgroundColor: colors.primary }]}
+              style={[
+                styles.headerSubmitButton, 
+                { 
+                  backgroundColor: isFormValid ? colors.primary : colors.border,
+                  opacity: isSubmitting ? 0.7 : 1
+                }
+              ]}
               onPress={handleSubmit}
+              disabled={!isFormValid || isSubmitting}
             >
-              <Check size={20} color="#fff" />
-              <Text style={styles.submitButtonText}>Submit</Text>
+              <Check size={16} color="#fff" />
+              <Text style={styles.headerSubmitButtonText}>
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </Text>
             </Pressable>
           ),
         }} 
       />
       
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]}>
         <View style={styles.formContainer}>
           <ProductSelector 
             selectedProduct={selectedProduct}
@@ -117,6 +163,42 @@ export default function AddPriceScreen() {
               Your contributions make grocery shopping more transparent for everyone.
             </Text>
           </View>
+          
+          {/* Main Submit Button */}
+          <Pressable 
+            style={[
+              styles.submitButton,
+              { 
+                backgroundColor: isFormValid ? colors.primary : colors.border,
+                opacity: isSubmitting ? 0.7 : 1
+              }
+            ]}
+            onPress={handleSubmit}
+            disabled={!isFormValid || isSubmitting}
+          >
+            <Check size={20} color="#fff" />
+            <Text style={styles.submitButtonText}>
+              {isSubmitting ? 'Submitting Price...' : 'Submit Price'}
+            </Text>
+          </Pressable>
+          
+          {!isFormValid && (
+            <View style={[styles.validationContainer, { backgroundColor: colors.card }]}>
+              <Text style={[styles.validationTitle, { color: colors.text }]}>Required to submit:</Text>
+              <Text style={[styles.validationItem, { color: !selectedProduct ? colors.error : colors.success }]}>
+                {!selectedProduct ? '✗' : '✓'} Select a product
+              </Text>
+              <Text style={[styles.validationItem, { color: !selectedStore ? colors.error : colors.success }]}>
+                {!selectedStore ? '✗' : '✓'} Select a store
+              </Text>
+              <Text style={[styles.validationItem, { color: !price || parseFloat(price) <= 0 ? colors.error : colors.success }]}>
+                {!price || parseFloat(price) <= 0 ? '✗' : '✓'} Enter a valid price
+              </Text>
+              <Text style={[styles.validationItem, { color: media.length === 0 ? colors.error : colors.success }]}>
+                {media.length === 0 ? '✗' : '✓'} Add at least one photo/video/receipt
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
       
@@ -135,18 +217,38 @@ const styles = StyleSheet.create({
   formContainer: {
     padding: 16,
   },
+  headerSubmitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  headerSubmitButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
+    marginLeft: 4,
+  },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 16,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 24,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   submitButtonText: {
     color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
-    marginLeft: 4,
   },
   infoContainer: {
     marginTop: 24,
@@ -162,5 +264,19 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  validationContainer: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 8,
+  },
+  validationTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  validationItem: {
+    fontSize: 12,
+    marginBottom: 4,
   },
 });
