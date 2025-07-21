@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, FlatList, Image, TextInput } from 'react-native';
-import { ShoppingBag, ChevronDown, Search } from 'lucide-react-native';
-import Colors from '@/constants/colors';
-import { products } from '@/mocks/data';
+import { ShoppingBag, ChevronDown, Search, Plus } from 'lucide-react-native';
+import { useTheme } from '@/hooks/useTheme';
+import { useAppStore } from '@/store/useAppStore';
 import { Product } from '@/types';
+import AddProductModal from './AddProductModal';
 
 type ProductSelectorProps = {
   selectedProduct: Product | null;
@@ -11,8 +12,14 @@ type ProductSelectorProps = {
 };
 
 export default function ProductSelector({ selectedProduct, onProductSelect }: ProductSelectorProps) {
+  const { colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  
+  // Get products from store
+  const products = useAppStore(state => state.products);
+  const addProduct = useAppStore(state => state.addProduct);
   
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -21,6 +28,17 @@ export default function ProductSelector({ selectedProduct, onProductSelect }: Pr
   const handleProductSelect = (product: Product) => {
     onProductSelect(product);
     setIsOpen(false);
+    setSearchQuery('');
+  };
+  
+  const handleAddNewProduct = () => {
+    setIsOpen(false);
+    setShowAddProductModal(true);
+  };
+  
+  const handleProductAdded = (newProduct: Product) => {
+    addProduct(newProduct);
+    onProductSelect(newProduct);
   };
   
   const filteredProducts = searchQuery
@@ -32,59 +50,79 @@ export default function ProductSelector({ selectedProduct, onProductSelect }: Pr
   
   const renderProductItem = ({ item }: { item: Product }) => (
     <Pressable 
-      style={styles.productItem} 
+      style={[styles.productItem, { borderBottomColor: colors.border }]} 
       onPress={() => handleProductSelect(item)}
     >
       {item.imageUrl ? (
         <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
       ) : (
-        <View style={styles.productImagePlaceholder}>
-          <ShoppingBag size={16} color={Colors.textSecondary} />
+        <View style={[styles.productImagePlaceholder, { backgroundColor: colors.border }]}>
+          <ShoppingBag size={16} color={colors.textSecondary} />
         </View>
       )}
       <View style={styles.productDetails}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productCategory}>{item.category}</Text>
+        <Text style={[styles.productName, { color: colors.text }]}>{item.name}</Text>
+        <Text style={[styles.productCategory, { color: colors.textSecondary }]}>{item.category}</Text>
+      </View>
+    </Pressable>
+  );
+  
+  const renderAddNewProductItem = () => (
+    <Pressable 
+      style={[styles.addProductItem, { borderBottomColor: colors.border, backgroundColor: colors.card }]} 
+      onPress={handleAddNewProduct}
+    >
+      <View style={[styles.addProductIcon, { backgroundColor: colors.primary }]}>
+        <Plus size={16} color="#fff" />
+      </View>
+      <View style={styles.addProductDetails}>
+        <Text style={[styles.addProductText, { color: colors.primary }]}>Add New Product</Text>
+        <Text style={[styles.addProductSubtext, { color: colors.textSecondary }]}>
+          Can't find your product? Add it here
+        </Text>
       </View>
     </Pressable>
   );
   
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Product</Text>
+      <Text style={[styles.label, { color: colors.text }]}>Product</Text>
       
-      <Pressable style={styles.selector} onPress={toggleDropdown}>
+      <Pressable 
+        style={[styles.selector, { borderColor: colors.border, backgroundColor: colors.card }]} 
+        onPress={toggleDropdown}
+      >
         {selectedProduct ? (
           <View style={styles.selectedProduct}>
             {selectedProduct.imageUrl ? (
               <Image source={{ uri: selectedProduct.imageUrl }} style={styles.selectedProductImage} />
             ) : (
-              <View style={styles.productImagePlaceholder}>
-                <ShoppingBag size={16} color={Colors.textSecondary} />
+              <View style={[styles.productImagePlaceholder, { backgroundColor: colors.border }]}>
+                <ShoppingBag size={16} color={colors.textSecondary} />
               </View>
             )}
             <View style={styles.selectedProductDetails}>
-              <Text style={styles.selectedProductName}>{selectedProduct.name}</Text>
-              <Text style={styles.selectedProductCategory}>{selectedProduct.category}</Text>
+              <Text style={[styles.selectedProductName, { color: colors.text }]}>{selectedProduct.name}</Text>
+              <Text style={[styles.selectedProductCategory, { color: colors.textSecondary }]}>{selectedProduct.category}</Text>
             </View>
           </View>
         ) : (
           <View style={styles.placeholderContainer}>
-            <ShoppingBag size={20} color={Colors.textSecondary} />
-            <Text style={styles.placeholder}>Select a product</Text>
+            <ShoppingBag size={20} color={colors.textSecondary} />
+            <Text style={[styles.placeholder, { color: colors.textSecondary }]}>Select a product</Text>
           </View>
         )}
-        <ChevronDown size={20} color={Colors.textSecondary} />
+        <ChevronDown size={20} color={colors.textSecondary} />
       </Pressable>
       
       {isOpen && (
-        <View style={styles.dropdown}>
-          <View style={styles.searchContainer}>
-            <Search size={16} color={Colors.textSecondary} />
+        <View style={[styles.dropdown, { borderColor: colors.border, backgroundColor: colors.background }]}>
+          <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
+            <Search size={16} color={colors.textSecondary} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search products..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -95,14 +133,24 @@ export default function ProductSelector({ selectedProduct, onProductSelect }: Pr
             renderItem={renderProductItem}
             keyExtractor={(item) => item.id}
             style={styles.productList}
+            ListHeaderComponent={renderAddNewProductItem}
             ListEmptyComponent={
               <View style={styles.emptyList}>
-                <Text style={styles.emptyText}>No products found</Text>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No products found</Text>
+                <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
+                  Try a different search or add a new product
+                </Text>
               </View>
             }
           />
         </View>
       )}
+      
+      <AddProductModal
+        visible={showAddProductModal}
+        onClose={() => setShowAddProductModal(false)}
+        onAddProduct={handleProductAdded}
+      />
     </View>
   );
 }
@@ -114,7 +162,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: 8,
   },
   selector: {
@@ -122,10 +169,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 8,
     padding: 12,
-    backgroundColor: Colors.card,
   },
   placeholderContainer: {
     flexDirection: 'row',
@@ -133,15 +178,12 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     fontSize: 16,
-    color: Colors.textSecondary,
     marginLeft: 8,
   },
   dropdown: {
     marginTop: 4,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 8,
-    backgroundColor: Colors.background,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -154,24 +196,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: Colors.text,
     marginLeft: 8,
     padding: 0,
   },
   productList: {
     maxHeight: 240,
   },
+  addProductItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 2,
+  },
+  addProductIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  addProductDetails: {
+    flex: 1,
+  },
+  addProductText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  addProductSubtext: {
+    fontSize: 12,
+  },
   productItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   productImage: {
     width: 40,
@@ -183,7 +246,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 4,
-    backgroundColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -194,11 +256,9 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
   },
   productCategory: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   selectedProduct: {
     flexDirection: 'row',
@@ -217,11 +277,9 @@ const styles = StyleSheet.create({
   selectedProductName: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
   },
   selectedProductCategory: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   emptyList: {
     padding: 16,
@@ -229,6 +287,9 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 12,
   },
 });

@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FilterOptions, PriceSubmission, PriceVerification } from '@/types';
-import { priceSubmissions as mockSubmissions } from '@/mocks/data';
+import { FilterOptions, PriceSubmission, PriceVerification, Product } from '@/types';
+import { priceSubmissions as mockSubmissions, products as mockProducts } from '@/mocks/data';
 
 interface AppState {
   submissions: PriceSubmission[];
+  products: Product[];
   filterOptions: FilterOptions;
   searchQuery: string;
   userSubmissions: PriceSubmission[];
@@ -16,6 +17,7 @@ interface AppState {
   deleteSubmission: (id: string) => void;
   voteSubmission: (id: string, voteType: 'up' | 'down' | null) => void;
   verifySubmission: (id: string, verification: PriceVerification) => void;
+  addProduct: (product: Product) => void;
   setFilterOptions: (options: Partial<FilterOptions>) => void;
   setSearchQuery: (query: string) => void;
 }
@@ -25,6 +27,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       submissions: mockSubmissions,
+      products: mockProducts,
       filterOptions: {
         sortBy: 'newest',
       },
@@ -115,6 +118,11 @@ export const useAppStore = create<AppState>()(
           };
         }),
       
+      addProduct: (product) =>
+        set((state) => ({
+          products: [product, ...state.products],
+        })),
+      
       setFilterOptions: (options) =>
         set((state) => ({
           filterOptions: { ...state.filterOptions, ...options },
@@ -128,6 +136,7 @@ export const useAppStore = create<AppState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         userSubmissions: state.userSubmissions,
+        products: state.products,
       }),
     }
   )
