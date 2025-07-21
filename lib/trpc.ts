@@ -1,45 +1,23 @@
-import { createTRPCReact } from "@trpc/react-query";
-import { httpLink } from "@trpc/client";
-import superjson from "superjson";
+// Since this app doesn't use tRPC and has no backend, we'll create a minimal setup
+// that satisfies TypeScript without breaking the build
 
-// Create a simple type for the router since we're removing the backend
+import { createTRPCReact } from "@trpc/react-query";
+
+// Create a minimal router type that satisfies tRPC's constraints
 export type AppRouter = {
-  example: {
-    hi: {
-      input: { name: string };
-      output: { hello: string; date: Date };
-    };
+  _def: {
+    _config: any;
+    router: true;
+    procedures: any;
+    record: any;
   };
+  createCaller: (ctx: any) => any;
 };
 
+// Create the tRPC client (not used in the app but prevents build errors)
 export const trpc = createTRPCReact<AppRouter>();
 
-const getBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  
-  return 'http://localhost:3000';
-};
-
+// This client is not used since the app has no backend
 export const trpcClient = trpc.createClient({
-  links: [
-    httpLink({
-      url: `${getBaseUrl()}/api/trpc`,
-      transformer: superjson,
-      fetch: (url, options) => {
-        return fetch(url, {
-          ...options,
-          headers: {
-            ...options?.headers,
-            'Content-Type': 'application/json',
-          },
-        });
-      },
-    }),
-  ],
+  links: [],
 });
