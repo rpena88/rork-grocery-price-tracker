@@ -6,24 +6,18 @@ import superjson from "superjson";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
-  // For production builds, use the environment variable
-  if (process.env.NODE_ENV === 'production' && process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
-    return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  }
-  
-  // For development, try environment variable first, then fallback
-  if (process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
-    return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  }
-
-  // Development fallback
+  // For Vercel deployment
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
-
-  throw new Error(
-    "No base url found, please set EXPO_PUBLIC_RORK_API_BASE_URL"
-  );
+  
+  // For server-side rendering
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Development fallback
+  return 'http://localhost:3000';
 };
 
 export const trpcClient = trpc.createClient({
