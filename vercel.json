@@ -1,22 +1,22 @@
 {
-  "buildCommand": "expo export -p web",
+  "buildCommand": "npm run build:production",
   "outputDirectory": "dist",
-  "devCommand": "expo start --web",
+  "devCommand": "npm run web",
   "installCommand": "npm install",
   "framework": null,
+  "functions": {
+    "api/trpc/[trpc].ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/trpc/(.*)",
+      "destination": "/api/trpc/[trpc]"
     },
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 }
