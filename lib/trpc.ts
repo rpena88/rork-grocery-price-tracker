@@ -1,4 +1,4 @@
-import { createTRPCReact } from "@tanstack/react-query";
+import { createTRPCReact } from "@trpc/react-query";
 import { httpLink } from "@trpc/client";
 import superjson from "superjson";
 
