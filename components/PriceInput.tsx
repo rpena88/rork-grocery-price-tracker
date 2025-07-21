@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput } from 'react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 type PriceInputProps = {
   value: string;
@@ -8,6 +8,8 @@ type PriceInputProps = {
 };
 
 export default function PriceInput({ value, onChangeText }: PriceInputProps) {
+  const { colors } = useTheme();
+  
   const handleChangeText = (text: string) => {
     // Only allow numbers and a single decimal point
     const filtered = text.replace(/[^0-9.]/g, '');
@@ -28,16 +30,16 @@ export default function PriceInput({ value, onChangeText }: PriceInputProps) {
   
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Price</Text>
-      <View style={styles.inputContainer}>
-        <Text style={styles.currencySymbol}>$</Text>
+      <Text style={[styles.label, { color: colors.text }]}>Price</Text>
+      <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.currencySymbol, { color: colors.text }]}>$</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: colors.primary }]}
           value={value}
           onChangeText={handleChangeText}
           keyboardType="decimal-pad"
           placeholder="0.00"
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
         />
       </View>
     </View>
@@ -51,29 +53,24 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 8,
-    backgroundColor: Colors.card,
     paddingHorizontal: 12,
   },
   currencySymbol: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
     marginRight: 4,
   },
   input: {
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.primary,
     paddingVertical: 12,
   },
 });

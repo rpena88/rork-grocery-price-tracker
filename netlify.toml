@@ -20,6 +20,7 @@
 
 [functions]
   node_bundler = "esbuild"
+  external_node_modules = ["@trpc/server", "hono", "zod", "superjson"]
 
 [[headers]]
   for = "/static/*"

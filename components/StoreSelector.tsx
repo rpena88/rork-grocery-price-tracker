@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, FlatList, Image } from 'react-native';
 import { MapPin, ChevronDown, Search } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { stores } from '@/mocks/data';
 import { Store } from '@/types';
 
@@ -11,6 +11,7 @@ type StoreSelectorProps = {
 };
 
 export default function StoreSelector({ selectedStore, onStoreSelect }: StoreSelectorProps) {
+  const { colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   
   const toggleDropdown = () => {
@@ -24,58 +25,61 @@ export default function StoreSelector({ selectedStore, onStoreSelect }: StoreSel
   
   const renderStoreItem = ({ item }: { item: Store }) => (
     <Pressable 
-      style={styles.storeItem} 
+      style={[styles.storeItem, { borderBottomColor: colors.border }]} 
       onPress={() => handleStoreSelect(item)}
     >
       {item.imageUrl ? (
         <Image source={{ uri: item.imageUrl }} style={styles.storeImage} />
       ) : (
-        <View style={styles.storeImagePlaceholder}>
-          <MapPin size={16} color={Colors.textSecondary} />
+        <View style={[styles.storeImagePlaceholder, { backgroundColor: colors.border }]}>
+          <MapPin size={16} color={colors.textSecondary} />
         </View>
       )}
       <View style={styles.storeDetails}>
-        <Text style={styles.storeName}>{item.name}</Text>
-        <Text style={styles.storeAddress}>{item.address}, {item.city}</Text>
+        <Text style={[styles.storeName, { color: colors.text }]}>{item.name}</Text>
+        <Text style={[styles.storeAddress, { color: colors.textSecondary }]}>{item.address}, {item.city}</Text>
       </View>
     </Pressable>
   );
   
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Store</Text>
+      <Text style={[styles.label, { color: colors.text }]}>Store</Text>
       
-      <Pressable style={styles.selector} onPress={toggleDropdown}>
+      <Pressable 
+        style={[styles.selector, { borderColor: colors.border, backgroundColor: colors.card }]} 
+        onPress={toggleDropdown}
+      >
         {selectedStore ? (
           <View style={styles.selectedStore}>
             {selectedStore.imageUrl ? (
               <Image source={{ uri: selectedStore.imageUrl }} style={styles.selectedStoreImage} />
             ) : (
-              <View style={styles.storeImagePlaceholder}>
-                <MapPin size={16} color={Colors.textSecondary} />
+              <View style={[styles.storeImagePlaceholder, { backgroundColor: colors.border }]}>
+                <MapPin size={16} color={colors.textSecondary} />
               </View>
             )}
             <View style={styles.selectedStoreDetails}>
-              <Text style={styles.selectedStoreName}>{selectedStore.name}</Text>
-              <Text style={styles.selectedStoreAddress}>
+              <Text style={[styles.selectedStoreName, { color: colors.text }]}>{selectedStore.name}</Text>
+              <Text style={[styles.selectedStoreAddress, { color: colors.textSecondary }]}>
                 {selectedStore.address}, {selectedStore.city}
               </Text>
             </View>
           </View>
         ) : (
           <View style={styles.placeholderContainer}>
-            <MapPin size={20} color={Colors.textSecondary} />
-            <Text style={styles.placeholder}>Select a store</Text>
+            <MapPin size={20} color={colors.textSecondary} />
+            <Text style={[styles.placeholder, { color: colors.textSecondary }]}>Select a store</Text>
           </View>
         )}
-        <ChevronDown size={20} color={Colors.textSecondary} />
+        <ChevronDown size={20} color={colors.textSecondary} />
       </Pressable>
       
       {isOpen && (
-        <View style={styles.dropdown}>
-          <View style={styles.searchContainer}>
-            <Search size={16} color={Colors.textSecondary} />
-            <Text style={styles.searchPlaceholder}>Search stores...</Text>
+        <View style={[styles.dropdown, { borderColor: colors.border, backgroundColor: colors.background }]}>
+          <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
+            <Search size={16} color={colors.textSecondary} />
+            <Text style={[styles.searchPlaceholder, { color: colors.textSecondary }]}>Search stores...</Text>
           </View>
           
           <FlatList
@@ -97,7 +101,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: 8,
   },
   selector: {
@@ -105,10 +108,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 8,
     padding: 12,
-    backgroundColor: Colors.card,
   },
   placeholderContainer: {
     flexDirection: 'row',
@@ -116,15 +117,12 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     fontSize: 16,
-    color: Colors.textSecondary,
     marginLeft: 8,
   },
   dropdown: {
     marginTop: 4,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 8,
-    backgroundColor: Colors.background,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -137,11 +135,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   searchPlaceholder: {
     fontSize: 14,
-    color: Colors.textSecondary,
     marginLeft: 8,
   },
   storeList: {
@@ -152,7 +148,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   storeImage: {
     width: 40,
@@ -164,7 +159,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 4,
-    backgroundColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -175,11 +169,9 @@ const styles = StyleSheet.create({
   storeName: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
   },
   storeAddress: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   selectedStore: {
     flexDirection: 'row',
@@ -198,10 +190,8 @@ const styles = StyleSheet.create({
   selectedStoreName: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
   },
   selectedStoreAddress: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
 });

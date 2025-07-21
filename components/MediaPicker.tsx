@@ -1,17 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ScrollView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, Receipt, Video, X, Plus } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 type MediaPickerProps = {
   onMediaChange: (media: { uri: string; type: 'image' | 'video' | 'receipt' }[]) => void;
 };
 
 export default function MediaPicker({ onMediaChange }: MediaPickerProps) {
+  const { colors } = useTheme();
   const [media, setMedia] = useState<{ uri: string; type: 'image' | 'video' | 'receipt' }[]>([]);
   
   const pickImage = async (type: 'image' | 'video' | 'receipt') => {
+    if (Platform.OS === 'web') {
+      // Web fallback - create a mock image for demo purposes
+      const mockUri = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400';
+      const newMedia = { uri: mockUri, type };
+      const updatedMedia = [...media, newMedia];
+      setMedia(updatedMedia);
+      onMediaChange(updatedMedia);
+      return;
+    }
+    
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (!permissionResult.granted) {
@@ -57,7 +68,7 @@ export default function MediaPicker({ onMediaChange }: MediaPickerProps) {
   
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Photos, Videos, or Receipts</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Add Photos, Videos, or Receipts</Text>
       
       <ScrollView 
         horizontal 
@@ -82,7 +93,7 @@ export default function MediaPicker({ onMediaChange }: MediaPickerProps) {
         {media.length < 5 && (
           <View style={styles.mediaPickerButtons}>
             <Pressable 
-              style={[styles.mediaButton, { backgroundColor: Colors.primary }]}
+              style={[styles.mediaButton, { backgroundColor: colors.primary }]}
               onPress={() => pickImage('image')}
             >
               <Camera size={24} color="#fff" />
@@ -90,7 +101,7 @@ export default function MediaPicker({ onMediaChange }: MediaPickerProps) {
             </Pressable>
             
             <Pressable 
-              style={[styles.mediaButton, { backgroundColor: Colors.secondary }]}
+              style={[styles.mediaButton, { backgroundColor: colors.secondary }]}
               onPress={() => pickImage('video')}
             >
               <Video size={24} color="#fff" />
@@ -98,7 +109,7 @@ export default function MediaPicker({ onMediaChange }: MediaPickerProps) {
             </Pressable>
             
             <Pressable 
-              style={[styles.mediaButton, { backgroundColor: Colors.info }]}
+              style={[styles.mediaButton, { backgroundColor: colors.info }]}
               onPress={() => pickImage('receipt')}
             >
               <Receipt size={24} color="#fff" />
@@ -109,10 +120,10 @@ export default function MediaPicker({ onMediaChange }: MediaPickerProps) {
       </ScrollView>
       
       {media.length === 0 && (
-        <View style={styles.emptyState}>
-          <Plus size={40} color={Colors.border} />
-          <Text style={styles.emptyText}>Add photos, videos, or receipts</Text>
-          <Text style={styles.emptySubtext}>Help others by sharing visual proof of prices</Text>
+        <View style={[styles.emptyState, { borderColor: colors.border }]}>
+          <Plus size={40} color={colors.border} />
+          <Text style={[styles.emptyText, { color: colors.text }]}>Add photos, videos, or receipts</Text>
+          <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Help others by sharing visual proof of prices</Text>
         </View>
       )}
     </View>
@@ -126,7 +137,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: 12,
     paddingHorizontal: 16,
   },
@@ -186,7 +196,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 24,
     borderWidth: 2,
-    borderColor: Colors.border,
     borderStyle: 'dashed',
     borderRadius: 12,
     marginHorizontal: 16,
@@ -195,12 +204,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginTop: 12,
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.textSecondary,
     marginTop: 4,
   },
 });
