@@ -3,11 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "bunx rork start -p 7rh9bw1vemjci5avpheom --tunnel",
-    "start-web": "bunx rork start -p 7rh9bw1vemjci5avpheom --web --tunnel",
-    "start-web-dev": "DEBUG=expo* bunx rork start -p 7rh9bw1vemjci5avpheom --web --tunnel",
-    "build": "expo export -p web"
-  },
+  "build:production": "npm run build:production"
+},
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@hono/trpc-server": "^0.4.0",
